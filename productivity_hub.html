@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0f766e">
+    <link rel="manifest" href="data:application/manifest+json;utf-8,%7B%22name%22%3A%22Productivity%20Hub%22%2C%22short_name%22%3A%22ProdHub%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f8fafc%22%2C%22theme_color%22%3A%22%230f766e%22%7D">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ProductivityHub">
+    <title>Productivity Hub</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0f766e',
+                        primaryLight: '#14b8a6',
+                        primaryDark: '#115e59',
+                        surface: '#f8fafc',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar and hide scrollbar for clean mobile tabs */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9;
+        }
+    </style>
+</head>
+<body class="h-full flex justify-center items-center m-0 overflow-hidden bg-slate-100">
+
+    <!-- Floating Viewport Toggle Button (Desktop Only) -->
+    <button onclick="toggleViewportMode()" id="viewport-toggle-btn" class="hidden sm:flex fixed top-4 right-4 z-50 bg-white/90 backdrop-blur hover:bg-white text-slate-700 px-3.5 py-2 rounded-xl shadow-md border border-slate-200 text-xs font-semibold items-center gap-2 transition">
+        <i id="viewport-toggle-icon" class="fa-solid fa-expand text-primary"></i>
+        <span id="viewport-toggle-text">Mode Layar Penuh Komputer</span>
+    </button>
+
+    <!-- Main App Container: Adapts between Smartphone Mockup and Full Desktop Screen -->
+    <div id="app-container" class="w-full h-full sm:max-w-[420px] sm:h-[90vh] sm:max-h-[850px] sm:rounded-[40px] sm:shadow-2xl sm:border-[8px] sm:border-slate-800 bg-surface flex flex-col relative overflow-hidden transition-all duration-300">
+
+        <!-- Header -->
+        <header class="bg-primary text-white px-6 pt-8 pb-4 shadow-md z-10 flex items-center justify-between shrink-0">
+            <div>
+                <span id="header-subtitle" class="text-xs uppercase tracking-wider text-teal-200 font-semibold">Tugas Harian</span>
+                <h1 id="header-title" class="text-xl font-bold tracking-tight">Productivity Hub</h1>
+            </div>
+            <div class="w-10 h-10 rounded-full bg-primaryDark flex items-center justify-center text-teal-100 shadow-inner">
+                <i id="header-icon" class="fa-solid fa-list-check text-lg"></i>
+            </div>
+        </header>
+
+        <!-- Main Content Viewport -->
+        <main class="flex-1 overflow-y-auto no-scrollbar relative p-5 pb-24">
+
+            <!-- TAB 1: TUGAS (TODO LIST) -->
+            <section id="tab-tugas" class="space-y-4 tab-content">
+                <!-- Add Task Card -->
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+                    <h2 class="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-plus-circle text-primary"></i> Tambah Tugas Baru
+                    </h2>
+                    <form id="task-form" onsubmit="addTask(event)" class="space-y-3">
+                        <input type="text" id="task-input" placeholder="Apa yang ingin kamu selesaikan?" required
+                            class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-slate-50">
+                        <div class="flex gap-2">
+                            <select id="task-category" class="px-3 py-2 rounded-xl border border-slate-200 text-xs bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary">
+                                <option value="Pekerjaan">💼 Pekerjaan</option>
+                                <option value="Pribadi">🏠 Pribadi</option>
+                                <option value="Belajar">📚 Belajar</option>
+                            </select>
+                            <button type="submit" class="flex-1 bg-primary hover:bg-primaryDark text-white py-2 px-4 rounded-xl text-sm font-medium transition shadow-sm flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-check"></i> Simpan Tugas
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Task Filters & List Header -->
+                <div class="flex items-center justify-between pt-2">
+                    <h3 class="font-bold text-slate-800 text-base">Daftar Tugas</h3>
+                    <span id="task-counter" class="text-xs bg-teal-100 text-primary font-semibold px-2.5 py-1 rounded-full">0 selesai</span>
+                </div>
+
+                <!-- Task Items Container -->
+                <div id="task-list" class="space-y-2.5">
+                    <!-- Dynamic task items inserted here -->
+                </div>
+            </section>
+
+            <!-- TAB 2: FOKUS (POMODORO TIMER) -->
+            <section id="tab-fokus" class="space-y-6 tab-content hidden">
+                <!-- Timer Card -->
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 text-center flex flex-col items-center">
+                    <!-- Mode Switcher Tabs -->
+                    <div class="flex bg-slate-100 p-1 rounded-xl mb-6 w-full max-w-sm">
+                        <button onclick="setTimerMode('pomodoro')" id="mode-pomodoro" class="flex-1 py-2 text-xs font-semibold rounded-lg bg-primary text-white transition shadow-sm">Fokus Belajar 25 Menit</button>
+                        <button onclick="setTimerMode('shortBreak')" id="mode-shortBreak" class="flex-1 py-2 text-xs font-semibold rounded-lg text-slate-600 transition">Istirahat Santai 5 Menit</button>
+                    </div>
+
+                    <!-- Circular Timer Display -->
+                    <div class="relative w-48 h-48 rounded-full border-8 border-teal-50 flex items-center justify-center shadow-inner mb-6 bg-gradient-to-b from-slate-50 to-white">
+                        <div class="absolute inset-0 rounded-full border-4 border-primary/20 animate-pulse"></div>
+                        <div class="text-center">
+                            <span id="timer-display" class="text-4xl font-extrabold text-slate-800 tracking-tight">25:00</span>
+                            <p id="timer-label" class="text-xs text-slate-400 font-medium uppercase tracking-wider mt-1">Sesi Kerja</p>
+                        </div>
+                    </div>
+
+                    <!-- Timer Controls -->
+                    <div class="flex items-center justify-center gap-3 w-full">
+                        <button onclick="toggleTimer()" id="timer-toggle-btn" class="flex-1 bg-primary hover:bg-primaryDark text-white py-3 px-4 rounded-2xl font-semibold text-sm shadow-md transition flex items-center justify-center gap-2">
+                            <i id="timer-icon-play" class="fa-solid fa-play"></i> <span id="timer-btn-text">Mulai</span>
+                        </button>
+                        <button onclick="resetTimer()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-3 rounded-2xl font-semibold text-sm transition shadow-sm flex items-center gap-1.5" title="Atur Ulang">
+                            <i class="fa-solid fa-rotate-right"></i> Atur Ulang
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Session Completion Prompt Card (Hidden by default) -->
+                <div id="pomodoro-prompt" class="hidden bg-gradient-to-br from-teal-50 to-emerald-50 border border-teal-200 p-4 rounded-2xl shadow-sm text-center space-y-3">
+                    <div class="w-10 h-10 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto text-lg">
+                        <i class="fa-solid fa-award"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-bold text-slate-800">Sesi Fokus Selesai! 🎉</h4>
+                        <p class="text-xs text-slate-600 mt-1">Kerja bagus! Waktunya beralih ke Tab Jurnal untuk mencatat evaluasi dan pemahaman materi belajarmu.</p>
+                    </div>
+                    <button onclick="switchTab('jurnal')" class="w-full bg-primary hover:bg-primaryDark text-white py-2.5 px-4 rounded-xl text-xs font-medium transition shadow-sm flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-book-open"></i> Buka Jurnal Refleksi Sekarang
+                    </button>
+                </div>
+
+                <!-- Focus Tips -->
+                <div class="bg-slate-50 border border-slate-100 p-4 rounded-2xl">
+                    <h4 class="text-xs font-bold text-primary uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                        <i class="fa-solid fa-lightbulb"></i> Tips Produktivitas
+                    </h4>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        Gunakan teknik Pomodoro: 25 menit fokus penuh tanpa gangguan, diikuti 5 menit istirahat sejenak untuk menyegarkan pikiran.
+                    </p>
+                </div>
+            </section>
+
+            <!-- TAB 3: JURNAL (DAILY JOURNAL) -->
+            <section id="tab-jurnal" class="space-y-4 tab-content hidden">
+                <!-- Add Journal Card -->
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+                    <h2 class="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-pen-nib text-primary"></i> Catat Refleksi Pembelajaran
+                    </h2>
+                    <form id="journal-form" onsubmit="addJournal(event)" class="space-y-3">
+                        <!-- Auto-filled Date & Subject Selector -->
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[10px] uppercase font-bold text-slate-400 mb-1">Tanggal Hari Ini</label>
+                                <input type="text" id="journal-date-display" readonly
+                                    class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs bg-slate-100 text-slate-600 font-medium cursor-not-allowed">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] uppercase font-bold text-slate-400 mb-1">Mata Pelajaran</label>
+                                <select id="journal-subject" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary font-medium text-slate-700">
+                                    <option value="Matematika">📐 Matematika</option>
+                                    <option value="Bahasa Indonesia">📖 Bahasa Indonesia</option>
+                                    <option value="Bahasa Inggris">🗣️ Bahasa Inggris</option>
+                                    <option value="Ilmu Pengetahuan Alam (IPA)">🔬 IPA (Sains)</option>
+                                    <option value="Ilmu Pengetahuan Sosial (IPS)">🌍 IPS (Sosial)</option>
+                                    <option value="Pemrograman / IT">💻 Pemrograman / IT</option>
+                                    <option value="Seni & Budaya">🎨 Seni & Budaya</option>
+                                    <option value="Lainnya">📚 Lainnya</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] uppercase font-bold text-slate-400 mb-1">Catatan Refleksi Pemahaman Materi</label>
+                            <textarea id="journal-content" rows="3" placeholder="Apa inti materi yang dipelajari hari ini? Bagian mana yang sudah dipahami atau masih menantang?" required
+                                class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-slate-50 resize-none"></textarea>
+                        </div>
+
+                        <button type="submit" class="w-full bg-primary hover:bg-primaryDark text-white py-3 px-4 rounded-xl text-sm font-medium transition shadow-sm flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-book-bookmark"></i> Simpan Catatan Refleksi
+                        </button>
+                    </form>
+                </div>
+
+                <div class="flex items-center justify-between pt-2">
+                    <h3 class="font-bold text-slate-800 text-base">Riwayat Catatan Refleksi</h3>
+                    <span id="journal-counter" class="text-xs bg-teal-100 text-primary font-semibold px-2.5 py-1 rounded-full">0 catatan</span>
+                </div>
+
+                <!-- Journal Entries List -->
+                <div id="journal-list" class="space-y-3">
+                    <!-- Dynamic journal items inserted here -->
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Fixed Bottom Navigation Bar -->
+        <nav class="absolute bottom-0 left-0 right-0 bg-white border-t border-slate-100 px-6 py-2.5 flex justify-around items-center z-20 shadow-lg">
+            <button onclick="switchTab('tugas')" id="nav-tugas" class="flex flex-col items-center justify-center text-primary transition py-1 px-3 rounded-xl scale-105 font-semibold">
+                <i class="fa-solid fa-square-check text-xl mb-0.5"></i>
+                <span class="text-[11px]">Tugas</span>
+            </button>
+            <button onclick="switchTab('fokus')" id="nav-fokus" class="flex flex-col items-center justify-center text-slate-400 hover:text-slate-600 transition py-1 px-3 rounded-xl">
+                <i class="fa-solid fa-stopwatch text-xl mb-0.5"></i>
+                <span class="text-[11px] font-medium">Fokus</span>
+            </button>
+            <button onclick="switchTab('jurnal')" id="nav-jurnal" class="flex flex-col items-center justify-center text-slate-400 hover:text-slate-600 transition py-1 px-3 rounded-xl">
+                <i class="fa-solid fa-book text-xl mb-0.5"></i>
+                <span class="text-[11px] font-medium">Jurnal</span>
+            </button>
+        </nav>
+
+        <!-- Toast Notification Box (Custom without alert) -->
+        <div id="toast" class="absolute top-20 left-1/2 -translate-x-1/2 bg-slate-900/90 text-white text-xs px-4 py-2.5 rounded-full shadow-lg opacity-0 pointer-events-none transition-all duration-300 z-50 flex items-center gap-2">
+            <i class="fa-solid fa-circle-check text-teal-400"></i>
+            <span id="toast-msg">Berhasil!</span>
+        </div>
+
+    </div>
+
+    <script>
+        // State Management & LocalStorage persistence
+        let tasks = JSON.parse(localStorage.getItem('ph_tasks')) || [
+            { id: 1, text: 'Rancang wireframe aplikasi mobile', category: 'Pekerjaan', completed: true },
+            { id: 2, text: 'Olahraga ringan selama 20 menit', category: 'Pribadi', completed: false },
+            { id: 3, text: 'Baca buku pengembangan diri 1 bab', category: 'Belajar', completed: false }
+        ];
+
+        let journals = JSON.parse(localStorage.getItem('ph_journals')) || [
+            { id: 1, subject: 'Pemrograman / IT', content: 'Memahami konsep dasar fungsi asynchronous dan penanganan event pada JavaScript.', date: '04 Okt 2026', timestamp: Date.now() - 3600000 }
+        ];
+
+        // Pomodoro State Variables
+        let timerInterval = null;
+        let timeLeft = 25 * 60; // 25 minutes default
+        let isRunning = false;
+        let currentTimerMode = 'pomodoro'; // 'pomodoro' or 'shortBreak'
+
+        // Desktop Viewport Mode Toggle State
+        let isFullScreenDesktop = false;
+
+        function toggleViewportMode() {
+            isFullScreenDesktop = !isFullScreenDesktop;
+            const container = document.getElementById('app-container');
+            const toggleBtnText = document.getElementById('viewport-toggle-text');
+            const toggleBtnIcon = document.getElementById('viewport-toggle-icon');
+
+            if (isFullScreenDesktop) {
+                // Expand to full desktop width/height layout
+                container.className = "w-full h-full max-w-5xl sm:h-[92vh] sm:rounded-3xl sm:shadow-2xl sm:border border-slate-200 bg-surface flex flex-col relative overflow-hidden transition-all duration-300";
+                toggleBtnText.textContent = "Mode Tampilan HP (Mockup)";
+                toggleBtnIcon.className = "fa-solid fa-mobile-screen text-primary";
+                showToast("Beralih ke mode layar penuh komputer");
+            } else {
+                // Return to smartphone mockup view
+                container.className = "w-full h-full sm:max-w-[420px] sm:h-[90vh] sm:max-h-[850px] sm:rounded-[40px] sm:shadow-2xl sm:border-[8px] sm:border-slate-800 bg-surface flex flex-col relative overflow-hidden transition-all duration-300";
+                toggleBtnText.textContent = "Mode Layar Penuh Komputer";
+                toggleBtnIcon.className = "fa-solid fa-expand text-primary";
+                showToast("Beralih kembali ke mode mockup smartphone");
+            }
+        }
+
+        // Initialize App on Load
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTasks();
+            renderJournals();
+            updateTaskCounter();
+            updateTimerDisplay();
+            setJournalCurrentDate();
+        });
+
+        // Set auto formatted current date for journal input
+        function setJournalCurrentDate() {
+            const dateInput = document.getElementById('journal-date-display');
+            if (dateInput) {
+                const options = { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' };
+                dateInput.value = new Date().toLocaleDateString('id-ID', options);
+            }
+        }
+
+        // Tab Navigation Switcher
+        function switchTab(tabName) {
+            const tabs = ['tugas', 'fokus', 'jurnal'];
+            tabs.forEach(t => {
+                const content = document.getElementById(`tab-${t}`);
+                const navBtn = document.getElementById(`nav-${t}`);
+                
+                if (t === tabName) {
+                    content.classList.remove('hidden');
+                    navBtn.className = "flex flex-col items-center justify-center text-primary transition py-1 px-3 rounded-xl scale-105 font-semibold";
+                    if (t === 'jurnal') {
+                        setJournalCurrentDate();
+                    }
+                } else {
+                    content.classList.add('hidden');
+                    navBtn.className = "flex flex-col items-center justify-center text-slate-400 hover:text-slate-600 transition py-1 px-3 rounded-xl font-medium";
+                }
+            });
+
+            // Update Header Meta
+            const subTitle = document.getElementById('header-subtitle');
+            const mainTitle = document.getElementById('header-title');
+            const headerIcon = document.getElementById('header-icon');
+
+            if (tabName === 'tugas') {
+                subTitle.textContent = 'Tugas Harian';
+                mainTitle.textContent = 'Productivity Hub';
+                headerIcon.className = 'fa-solid fa-list-check text-lg';
+            } else if (tabName === 'fokus') {
+                subTitle.textContent = 'Fokus & Waktu';
+                mainTitle.textContent = 'Pomodoro Timer';
+                headerIcon.className = 'fa-solid fa-stopwatch text-lg';
+            } else if (tabName === 'jurnal') {
+                subTitle.textContent = 'Catatan Belajar';
+                mainTitle.textContent = 'Jurnal Refleksi';
+                headerIcon.className = 'fa-solid fa-book-open text-lg';
+            }
+        }
+
+        // --- TASK MODULE ---
+        function renderTasks() {
+            const listEl = document.getElementById('task-list');
+            if (tasks.length === 0) {
+                listEl.innerHTML = `
+                    <div class="text-center py-8 text-slate-400 text-xs">
+                        <i class="fa-solid fa-clipboard-list text-3xl mb-2 text-slate-300"></i>
+                        <p>Belum ada tugas. Yuk tambah sekarang!</p>
+                    </div>`;
+                return;
+            }
+
+            listEl.innerHTML = tasks.map(task => `
+                <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between gap-3 transition hover:border-teal-200">
+                    <div class="flex items-center gap-3 flex-1 min-w-0">
+                        <input type="checkbox" ${task.completed ? 'checked' : ''} onclick="toggleTask(${task.id})"
+                            class="w-5 h-5 accent-primary rounded cursor-pointer shrink-0">
+                        <div class="min-w-0">
+                            <p class="text-sm font-medium text-slate-800 truncate ${task.completed ? 'line-through text-slate-400' : ''}">${escapeHtml(task.text)}</p>
+                            <span class="inline-block text-[10px] px-2 py-0.5 rounded-md font-medium bg-slate-100 text-slate-600 mt-0.5">${task.category}</span>
+                        </div>
+                    </div>
+                    <button onclick="deleteTask(${task.id})" class="text-slate-300 hover:text-rose-500 transition p-2">
+                        <i class="fa-solid fa-trash-can text-xs"></i>
+                    </button>
+                </div>
+            `).join('');
+            
+            updateTaskCounter();
+            localStorage.setItem('ph_tasks', JSON.stringify(tasks));
+        }
+
+        function addTask(e) {
+            e.preventDefault();
+            const input = document.getElementById('task-input');
+            const category = document.getElementById('task-category').value;
+            
+            if (!input.value.trim()) return;
+
+            const newTask = {
+                id: Date.now(),
+                text: input.value.trim(),
+                category: category,
+                completed: false
+            };
+
+            tasks.unshift(newTask);
+            input.value = '';
+            renderTasks();
+            showToast('Tugas berhasil ditambahkan!');
+        }
+
+        function toggleTask(id) {
+            const task = tasks.find(t => t.id === id);
+            if (task) {
+                task.completed = !task.completed;
+                renderTasks();
+            }
+        }
+
+        function deleteTask(id) {
+            tasks = tasks.filter(t => t.id !== id);
+            renderTasks();
+            showToast('Tugas dihapus');
+        }
+
+        function updateTaskCounter() {
+            const completedCount = tasks.filter(t => t.completed).length;
+            const counterEl = document.getElementById('task-counter');
+            counterEl.textContent = `${completedCount} dari ${tasks.length} selesai`;
+        }
+
+        // --- POMODORO TIMER MODULE ---
+        function setTimerMode(mode) {
+            if (isRunning) resetTimer();
+            currentTimerMode = mode;
+            const btnPomodoro = document.getElementById('mode-pomodoro');
+            const btnBreak = document.getElementById('mode-shortBreak');
+            const label = document.getElementById('timer-label');
+            const promptBox = document.getElementById('pomodoro-prompt');
+
+            promptBox.classList.add('hidden');
+
+            if (mode === 'pomodoro') {
+                timeLeft = 25 * 60;
+                btnPomodoro.className = "flex-1 py-2 text-xs font-semibold rounded-lg bg-primary text-white transition shadow-sm";
+                btnBreak.className = "flex-1 py-2 text-xs font-semibold rounded-lg text-slate-600 transition";
+                label.textContent = "Sesi Kerja";
+            } else {
+                timeLeft = 5 * 60;
+                btnBreak.className = "flex-1 py-2 text-xs font-semibold rounded-lg bg-primary text-white transition shadow-sm";
+                btnPomodoro.className = "flex-1 py-2 text-xs font-semibold rounded-lg text-slate-600 transition";
+                label.textContent = "Waktu Istirahat";
+            }
+            updateTimerDisplay();
+        }
+
+        function toggleTimer() {
+            const btnText = document.getElementById('timer-btn-text');
+            const playIcon = document.getElementById('timer-icon-play');
+            const toggleBtn = document.getElementById('timer-toggle-btn');
+            const promptBox = document.getElementById('pomodoro-prompt');
+
+            if (!isRunning) {
+                // Start Timer
+                isRunning = true;
+                btnText.textContent = "Jeda";
+                playIcon.className = "fa-solid fa-pause";
+                toggleBtn.className = "flex-1 bg-amber-600 hover:bg-amber-700 text-white py-3 px-4 rounded-2xl font-semibold text-sm shadow-md transition flex items-center justify-center gap-2";
+                promptBox.classList.add('hidden');
+
+                timerInterval = setInterval(() => {
+                    if (timeLeft > 0) {
+                        timeLeft--;
+                        updateTimerDisplay();
+                    } else {
+                        clearInterval(timerInterval);
+                        isRunning = false;
+                        playNativeAlarm();
+                        
+                        if (currentTimerMode === 'pomodoro') {
+                            promptBox.classList.remove('hidden');
+                        } else {
+                            showToast('Waktu istirahat selesai. Siap fokus kembali?');
+                        }
+                        resetTimerUIStates();
+                    }
+                }, 1000);
+            } else {
+                // Pause Timer
+                clearInterval(timerInterval);
+                isRunning = false;
+                btnText.textContent = "Lanjut";
+                playIcon.className = "fa-solid fa-play";
+                toggleBtn.className = "flex-1 bg-primary hover:bg-primaryDark text-white py-3 px-4 rounded-2xl font-semibold text-sm shadow-md transition flex items-center justify-center gap-2";
+            }
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            isRunning = false;
+            timeLeft = currentTimerMode === 'pomodoro' ? 25 * 60 : 5 * 60;
+            updateTimerDisplay();
+            resetTimerUIStates();
+            document.getElementById('pomodoro-prompt').classList.add('hidden');
+        }
+
+        function resetTimerUIStates() {
+            document.getElementById('timer-btn-text').textContent = "Mulai";
+            document.getElementById('timer-icon-play').className = "fa-solid fa-play";
+            document.getElementById('timer-toggle-btn').className = "flex-1 bg-primary hover:bg-primaryDark text-white py-3 px-4 rounded-2xl font-semibold text-sm shadow-md transition flex items-center justify-center gap-2";
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            const display = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            document.getElementById('timer-display').textContent = display;
+            
+            if (isRunning) {
+                document.title = `(${display}) Productivity Hub`;
+            } else {
+                document.title = `Productivity Hub`;
+            }
+        }
+
+        // Web Audio API Native Alarm Sound
+        function playNativeAlarm() {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+                const ctx = new AudioContext();
+
+                const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
+                notes.forEach((freq, index) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    
+                    osc.type = 'sine';
+                    osc.frequency.value = freq;
+                    
+                    gain.gain.setValueAtTime(0.2, ctx.currentTime + index * 0.2);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + index * 0.2 + 0.3);
+                    
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    
+                    osc.start(ctx.currentTime + index * 0.2);
+                    osc.stop(ctx.currentTime + index * 0.2 + 0.3);
+                });
+            } catch (e) {
+                console.log("AudioContext blocked or unsupported", e);
+            }
+        }
+
+        // --- JOURNAL MODULE ---
+        function renderJournals() {
+            const listEl = document.getElementById('journal-list');
+            const counterEl = document.getElementById('journal-counter');
+
+            // Sort journals newest first based on timestamp
+            journals.sort((a, b) => b.timestamp - a.timestamp);
+            counterEl.textContent = `${journals.length} catatan`;
+
+            if (journals.length === 0) {
+                listEl.innerHTML = `
+                    <div class="text-center py-8 text-slate-400 text-xs">
+                        <i class="fa-solid fa-book-bookmark text-3xl mb-2 text-slate-300"></i>
+                        <p>Belum ada catatan refleksi tersimpan.</p>
+                    </div>`;
+                return;
+            }
+
+            listEl.innerHTML = journals.map(j => `
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="inline-block text-[11px] bg-teal-50 text-primary font-bold px-2.5 py-1 rounded-lg">${escapeHtml(j.subject)}</span>
+                        <span class="text-[10px] text-slate-400 font-medium"><i class="fa-regular fa-calendar-days mr-1"></i> ${escapeHtml(j.date)}</span>
+                    </div>
+                    <p class="text-xs text-slate-700 leading-relaxed pt-1 whitespace-pre-wrap">${escapeHtml(j.content)}</p>
+                    <div class="flex justify-end pt-2 border-t border-slate-50">
+                        <button onclick="deleteJournal(${j.id})" class="text-slate-400 hover:text-rose-600 text-xs transition flex items-center gap-1 font-medium px-2 py-1 rounded-lg hover:bg-rose-50">
+                            <i class="fa-solid fa-trash-can text-[11px]"></i> Hapus Catatan
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            localStorage.setItem('ph_journals', JSON.stringify(journals));
+        }
+
+        function addJournal(e) {
+            e.preventDefault();
+            const subjectSelect = document.getElementById('journal-subject');
+            const contentInput = document.getElementById('journal-content');
+
+            if (!contentInput.value.trim()) return;
+
+            const options = { day: 'numeric', month: 'short', year: 'numeric' };
+            const currentDateStr = new Date().toLocaleDateString('id-ID', options);
+
+            const newJournal = {
+                id: Date.now(),
+                subject: subjectSelect.value,
+                content: contentInput.value.trim(),
+                date: currentDateStr,
+                timestamp: Date.now()
+            };
+
+            journals.unshift(newJournal);
+            contentInput.value = '';
+            renderJournals();
+            showToast('Catatan refleksi berhasil disimpan!');
+        }
+
+        function deleteJournal(id) {
+            journals = journals.filter(j => j.id !== id);
+            renderJournals();
+            showToast('Catatan refleksi dihapus');
+        }
+
+        // Helper: Custom Toast Notification
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const msgEl = document.getElementById('toast-msg');
+            msgEl.textContent = message;
+            
+            toast.classList.remove('opacity-0', 'pointer-events-none');
+            toast.classList.add('opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0', 'pointer-events-none');
+            }, 2500);
+        }
+
+        // Helper: Escape HTML to Prevent XSS
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
